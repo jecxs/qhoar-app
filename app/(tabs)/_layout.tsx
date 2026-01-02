@@ -47,6 +47,9 @@ export default function TabLayout() {
                 listeners={() => ({
                     tabPress: (e) => {
                         e.preventDefault();
+                        if (router.canDismiss()) {
+                            router.dismissAll();
+                        }
                         router.navigate('/');
                     },
                 })}
@@ -65,13 +68,6 @@ export default function TabLayout() {
                 options={{
                     title: 'Inscripción',
                     tabBarIcon: ({ color }) => <FontAwesome5 name="file-signature" size={22} color={color} />,
-                }}
-            />
-
-            <Tabs.Screen
-                name="modal"
-                options={{
-                    href: null,
                 }}
             />
         </Tabs>

@@ -1,6 +1,17 @@
-import { Redirect } from 'expo-router';
+import { View } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 
-// Componente no se verá realmente, el TabBar lo intercepta. Necesario por AppRouter
-export default function TabHome() {
-    return <Redirect href="/" />;
+export default function TabHomeDummy() {
+    const router = useRouter();
+
+
+    useFocusEffect(
+        useCallback(() => {
+            router.dismissAll();
+            router.navigate('/');
+        }, [])
+    );
+
+    return <View style={{ flex: 1, backgroundColor: 'white' }} />;
 }

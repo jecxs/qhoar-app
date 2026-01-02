@@ -81,7 +81,7 @@ export default function CategoriesScreen() {
                     {/* CORRECCIÓN: Botón Atrás */}
                     <TouchableOpacity
                         onPress={() => {
-                            router.navigate('/');
+                            router.replace('/');
                         }}
                         className="bg-orange-100 p-2 rounded-lg"
                     >
