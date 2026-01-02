@@ -11,7 +11,7 @@ const catIcon = require('@/assets/images/cat-icon.png');
 
 export default function HomeScreen() {
     return (
-        // 1. QUAMOS EL COLOR DE FONDO bg-[#F5F5F5] -> Ahora es transparente
+
         <View className="flex-1">
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar style="dark" />
@@ -24,7 +24,7 @@ export default function HomeScreen() {
                 blurRadius={1}
             />
 
-            {/* CAPA 2: CIUDAD */}
+            {/* CAPA 2: */}
             <Image
                 source={cityOverlay}
                 className="absolute bottom-0 w-full h-[28%]"
@@ -33,7 +33,7 @@ export default function HomeScreen() {
 
             {/* CAPA 3: CONTENIDO */}
             <SafeAreaView className="flex-1">
-                {/* Aumentamos padding horizontal a px-8 para centrar más los botones pequeños */}
+                {/* Aumentamos padding horizontal a px-8  */}
                 <View className="flex-1 px-8 pt-6 pb-20 items-center justify-center">
 
                     <View className="mb-10 items-center w-full">
@@ -44,7 +44,7 @@ export default function HomeScreen() {
                         />
                     </View>
 
-                    {/* 2. Espaciado vertical aumentado (gap-y-6) */}
+                    {/* 2. Espaciado vertical  */}
                     <View className="flex-row flex-wrap justify-center w-full gap-y-2 gap-x-10">
 
                         <HomeButton
