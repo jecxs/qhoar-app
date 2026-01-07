@@ -33,7 +33,7 @@ export default function SubcategoryScreen() {
             const { data, error } = await supabase
                 .from('subcategories')
                 .select('*')
-                .eq('category_id', id) // Filtramos por la categoría padre
+                .eq('category_id', id)
                 .order('name');
 
             if (error) throw error;
@@ -49,7 +49,10 @@ export default function SubcategoryScreen() {
         <TouchableOpacity
             className="bg-white mx-6 mb-4 p-5 rounded-2xl shadow-sm border border-orange-100 flex-row justify-between items-center"
             style={{ elevation: 2 }}
-            onPress={() => console.log("Ir a empresas de: " + item.name)}
+            onPress={() => router.push({
+                pathname: '/(tabs)/explore/list/[id]',
+                params: { id: item.id, name: item.name }
+            })}
         >
             <View className="flex-1 pr-4">
                 {/* Título de la subcategoría */}

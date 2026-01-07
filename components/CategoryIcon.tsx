@@ -11,6 +11,7 @@ const getIconName = (dbName: string) => {
         'utensils': 'utensils',
         'hammer': 'hammer',
         'store': 'store',
+        'church': 'church'
 
     };
     return map[dbName] || 'question'; // icono por defecto

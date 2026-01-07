@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import React, {useCallback, useEffect, useState} from 'react';
+import {View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, BackHandler} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { CategoryIcon } from '@/components/CategoryIcon';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
+import {useFocusEffect, useRouter} from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 // Importa tus assets (Ajusta las rutas si es necesario)
@@ -23,6 +23,22 @@ export default function CategoriesScreen() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+
+    useFocusEffect(
+        useCallback(() => {
+            const onBackPress = () => {
+                if (router.canGoBack()) {
+                    router.dismiss();
+                    return true;
+                }
+                return false;
+            };
+
+            const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+            return () => subscription.remove();
+
+        }, [])
+    );
 
     useEffect(() => {
         fetchCategories();
@@ -75,20 +91,24 @@ export default function CategoriesScreen() {
             />
 
             <SafeAreaView className="flex-1">
-                {/* 2. HEADER PERSONALIZADO CORREGIDO */}
+                {/* 2. HEADER PERSONALIZADO */}
                 <View className="flex-row justify-between items-start px-6 pt-2 mb-4">
 
-                    {/* CORRECCIÓN: Botón Atrás */}
+                    {/* Botón Atrás */}
                     <TouchableOpacity
                         onPress={() => {
-                            router.replace('/');
+                            if (router.canGoBack()) {
+                                router.dismiss();
+                            } else {
+                                router.navigate('/');
+                            }
                         }}
                         className="bg-orange-100 p-2 rounded-lg"
                     >
                         <FontAwesome5 name="chevron-left" size={20} color="#f97316" />
                     </TouchableOpacity>
 
-                    {/* Logo ... */}
+                    {/* Logo*/}
                     <Image
                         source={logoImage}
                         className="w-20 h-8"
@@ -128,7 +148,7 @@ export default function CategoriesScreen() {
             {/* 5. CIUDAD (Footer fijo abajo) */}
             <Image
                 source={cityOverlay}
-                className="absolute bottom-0 w-full h-32 opacity-90 z-0"
+                className="absolute bottom-10 w-full h-40 opacity-90 z-0"
                 resizeMode="stretch"
             />
         </View>

@@ -47,10 +47,11 @@ export default function TabLayout() {
                 listeners={() => ({
                     tabPress: (e) => {
                         e.preventDefault();
-                        if (router.canDismiss()) {
-                            router.dismissAll();
+                        if (router.canGoBack()) {
+                            router.dismiss();
+                        } else {
+                            router.replace('/');
                         }
-                        router.navigate('/');
                     },
                 })}
             />
