@@ -8,7 +8,8 @@ import {
     RefreshControl,
     Image,
     StyleSheet,
-    BackHandler
+    BackHandler,
+    Linking
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -127,17 +128,18 @@ export default function RegisterScreen() {
                 {/* 4. ACTIVO */}
                 {session && status === 'active' && (
                     <View style={styles.centeredContent}>
-                        <Text style={styles.emoji}><FontAwesome5  name="check"size={40} color="orange"/> </Text>
+                        <Text style={styles.emoji}>
+                            <FontAwesome5 name="check-circle" size={48} color="#f97316" />
+                        </Text>
                         <Text style={styles.statusTitle}>¡Tu negocio está visible!</Text>
                         <Text style={styles.statusText}>
                             {businessData?.is_premium
-                                ? 'Gestiona tu perfil y personalización desde nuestra web.'
+                                ? 'Tu suscripción Premium te permite destacar sobre la competencia.'
                                 : 'Completa tu perfil con imágenes y redes sociales para destacar más.'}
                         </Text>
 
-                        {/* Botones de acción */}
+                        {/* Botones de acción (APP) */}
                         <View style={styles.actionButtons}>
-                            {/* Botón Ver Perfil */}
                             <TouchableOpacity
                                 style={styles.viewProfileButton}
                                 onPress={() => router.push(`/(tabs)/explore/list/detail/${businessData?.id}`)}
@@ -146,24 +148,65 @@ export default function RegisterScreen() {
                                 <Text style={styles.viewProfileText}>Ver Perfil Público</Text>
                             </TouchableOpacity>
 
-                            {/* Botón Gestionar (solo freemium) */}
-                            {!businessData?.is_premium && (
-                                <TouchableOpacity
-                                    style={styles.manageButton}
-                                    onPress={() => router.push('/(tabs)/register/manage')}
-                                >
-                                    <FontAwesome5 name="edit" size={16} color="#f97316" />
-                                    <Text style={styles.manageButtonText}>Gestionar Perfil</Text>
-                                </TouchableOpacity>
-                            )}
+                            <TouchableOpacity
+                                style={styles.manageButton}
+                                onPress={() => {
+                                    if (businessData?.is_premium) {
+                                        router.push('/(tabs)/register/manage-premium');
+                                    } else {
+                                        router.push('/(tabs)/register/manage');
+                                    }
+                                }}
+                            >
+                                <FontAwesome5
+                                    name={businessData?.is_premium ? "magic" : "edit"}
+                                    size={16}
+                                    color="#f97316"
+                                />
+                                <Text style={styles.manageButtonText}>
+                                    {businessData?.is_premium ? 'Editor App' : 'Editar Perfil'}
+                                </Text>
+                            </TouchableOpacity>
                         </View>
 
-                        {/* Info Premium */}
-                        {!businessData?.is_premium && (
-                            <View style={styles.premiumCard}>
+                        {/* SECCIÓN CONDICIONAL PREMIUM */}
+                        {businessData?.is_premium ? (
+                            <View style={styles.premiumContainer}>
+                                {/* Badge de Estado */}
+                                <View style={styles.premiumBadge}>
+                                    <FontAwesome5 name="crown" size={16} color="#b45309" />
+                                    <Text style={styles.premiumBadgeText}>
+                                        Plan Premium Activo
+                                    </Text>
+                                </View>
+
+                                {/* NUEVA SECCIÓN: Link a la Web */}
+                                <View style={styles.webLinkCard}>
+                                    <View style={{flexDirection:'row', alignItems:'center', marginBottom:8}}>
+                                        <FontAwesome5 name="laptop" size={18} color="#374151" />
+                                        <Text style={styles.webLinkTitle}>Gestión Web</Text>
+                                    </View>
+
+                                    <Text style={styles.webLinkDesc}>
+                                        ¿Prefieres usar tu PC? También puedes editar tu perfil desde nuestra web:
+                                    </Text>
+
+                                    <TouchableOpacity
+                                        style={styles.urlButton}
+                                        // REEMPLAZA ESTA URL CON LA TUYA REAL DE VERCEL/HOSTING
+                                        onPress={() => Linking.openURL('https://admin.qhoar.com')}
+                                    >
+                                        <Text style={styles.urlText}>admin.qhoar.com</Text>
+                                        <FontAwesome5 name="external-link-alt" size={14} color="#f97316" />
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        ) : (
+                            // Versión Freemium (Mantiene el diseño original)
+                            <View style={styles.freemiumCard}>
                                 <FontAwesome5 name="crown" size={20} color="#f59e0b" />
-                                <Text style={styles.premiumText}>
-                                    ¿Quieres más personalización? Actualiza a Premium desde nuestra web.
+                                <Text style={styles.freemiumText}>
+                                    ¿Quieres más personalización? Actualiza a Premium en nuestra web.
                                 </Text>
                             </View>
                         )}
@@ -329,5 +372,86 @@ const styles = StyleSheet.create({
     logoutText: {
         color: '#ef4444',
         fontSize: 14
-    }
+    },
+    premiumContainer: {
+        width: '100%',
+        marginTop: 10,
+        gap: 12
+    },
+    premiumBadge: {
+        backgroundColor: '#fffbeb', // Ambar muy claro
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 99,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#fde68a',
+        gap: 8,
+        alignSelf: 'center'
+    },
+    premiumBadgeText: {
+        color: '#b45309',
+        fontWeight: 'bold',
+        fontSize: 14
+    },
+    webLinkCard: {
+        backgroundColor: 'white',
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2
+    },
+    webLinkTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#1f2937',
+        marginLeft: 8
+    },
+    webLinkDesc: {
+        fontSize: 14,
+        color: '#6b7280',
+        marginBottom: 12,
+        lineHeight: 20
+    },
+    urlButton: {
+        backgroundColor: '#f9fafb',
+        padding: 12,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#f3f4f6',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+    },
+    urlText: {
+        color: '#f97316', // Color naranja de tu marca
+        fontWeight: 'bold',
+        fontSize: 14
+    },
+    // Estilos para Freemium (reemplaza o ajusta los existentes)
+    freemiumCard: {
+        backgroundColor: '#f3f4f6',
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        borderRadius: 12,
+        padding: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        marginBottom: 24,
+        marginTop: 16
+    },
+    freemiumText: {
+        flex: 1,
+        fontSize: 13,
+        color: '#4b5563',
+        lineHeight: 18
+    },
 });

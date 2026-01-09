@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Image, TouchableOpacity, Linking, FlatList, Ima
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Business, BusinessImage, DesignConfig } from '@/constants/types/business';
 import { LinearGradient } from 'expo-linear-gradient';
+import {SOCIAL_PLATFORMS, SocialLink} from "@/constants/socials";
 
 const PLACEHOLDER_LOGO = 'https://via.placeholder.com/150';
 
@@ -49,9 +50,20 @@ export default function StandardLayout({ business, gallery, theme }: Props) {
             )}
         </View>
     );
+    const getSocials = (): SocialLink[] => {
+        const sl = business.social_links;
+        if (Array.isArray(sl)) return sl;
 
-    // Verificar si hay redes sociales
-    const hasSocials = socialLinks.facebook || socialLinks.instagram || socialLinks.tiktok || business.website_url;
+        // Fallback para datos antiguos
+        const arr: SocialLink[] = [];
+        if (sl?.facebook) arr.push({ platform: 'facebook', url: sl.facebook });
+        if (sl?.instagram) arr.push({ platform: 'instagram', url: sl.instagram });
+        if (sl?.tiktok) arr.push({ platform: 'tiktok', url: sl.tiktok });
+        return arr;
+    };
+
+    const displayLinks = getSocials();
+    const hasSocials = displayLinks.length > 0 || !!business.website_url;
 
     return (
         <ScrollView
@@ -209,33 +221,22 @@ export default function StandardLayout({ business, gallery, theme }: Props) {
                                         <Text className="text-gray-700 font-semibold ml-2">Sitio Web</Text>
                                     </TouchableOpacity>
                                 )}
-                                {socialLinks.facebook && (
-                                    <TouchableOpacity
-                                        onPress={() => openLink(socialLinks.facebook)}
-                                        className="bg-blue-50 px-5 py-3 rounded-xl flex-row items-center active:bg-blue-100"
-                                    >
-                                        <FontAwesome5 name="facebook" size={18} color="#1877F2" />
-                                        <Text className="text-blue-700 font-semibold ml-2">Facebook</Text>
-                                    </TouchableOpacity>
-                                )}
-                                {socialLinks.instagram && (
-                                    <TouchableOpacity
-                                        onPress={() => openLink(socialLinks.instagram)}
-                                        className="bg-pink-50 px-5 py-3 rounded-xl flex-row items-center active:bg-pink-100"
-                                    >
-                                        <FontAwesome5 name="instagram" size={18} color="#E1306C" />
-                                        <Text className="text-pink-700 font-semibold ml-2">Instagram</Text>
-                                    </TouchableOpacity>
-                                )}
-                                {socialLinks.tiktok && (
-                                    <TouchableOpacity
-                                        onPress={() => openLink(socialLinks.tiktok)}
-                                        className="bg-gray-100 px-5 py-3 rounded-xl flex-row items-center active:bg-gray-200"
-                                    >
-                                        <FontAwesome5 name="tiktok" size={18} color="#000000" />
-                                        <Text className="text-gray-800 font-semibold ml-2">TikTok</Text>
-                                    </TouchableOpacity>
-                                )}
+                                {displayLinks.map((link, i) => {
+                                    const cfg = SOCIAL_PLATFORMS[link.platform] || SOCIAL_PLATFORMS.globe;
+                                    return (
+                                        <TouchableOpacity
+                                            key={i}
+                                            onPress={() => Linking.openURL(link.url)}
+                                            className="bg-gray-100 px-5 py-3 rounded-xl flex-row items-center active:bg-gray-200"
+                                        >
+                                            <FontAwesome5 name={cfg.icon} size={18} color={cfg.color} />
+                                            {/* Opcional: Texto con el nombre de la red */}
+                                            <Text className="text-gray-700 font-semibold ml-2 capitalize">
+                                                {cfg.label}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
                             </View>
                         </View>
                     )}

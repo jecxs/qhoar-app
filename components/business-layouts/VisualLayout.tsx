@@ -3,6 +3,7 @@ import { View, Text, ScrollView, ImageBackground, TouchableOpacity, Linking, Dim
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Business, BusinessImage, DesignConfig } from '@/constants/types/business';
+import {SOCIAL_PLATFORMS, SocialLink} from "@/constants/socials";
 
 const { height, width } = Dimensions.get('window');
 
@@ -14,7 +15,20 @@ interface Props {
 
 export default function VisualLayout({ business, gallery, theme }: Props) {
     const bgImage = theme.background_url || theme.cover_url || business.hero_image_url || 'https://via.placeholder.com/800x1200';
-    const socialLinks = business.social_links || {};
+
+    const getSocials = (): SocialLink[] => {
+        const sl = business.social_links;
+        if (Array.isArray(sl)) return sl;
+
+        const arr: SocialLink[] = [];
+        if (sl?.facebook) arr.push({ platform: 'facebook', url: sl.facebook });
+        if (sl?.instagram) arr.push({ platform: 'instagram', url: sl.instagram });
+        if (sl?.tiktok) arr.push({ platform: 'tiktok', url: sl.tiktok });
+        return arr;
+    };
+
+    const displayLinks = getSocials();
+    const hasAnyLink = displayLinks.length > 0 || !!business.website_url;
 
     // Colores con fallback
     const primaryColor = theme.primary_color || '#f97316';
@@ -353,12 +367,14 @@ export default function VisualLayout({ business, gallery, theme }: Props) {
                     )}
 
                     {/* REDES SOCIALES CON DISEÑO MEJORADO */}
-                    {(socialLinks.facebook || socialLinks.instagram || socialLinks.tiktok || business.website_url) && (
+                    {hasAnyLink && (
                         <View className="mb-10">
-                            <Text className="text-white font-bold text-xl mb-4">
+                            <Text className="text-white font-bold text-xl mb-4 text-center">
                                 Síguenos
                             </Text>
-                            <View className="flex-row justify-center gap-4">
+
+                            <View className="flex-row flex-wrap justify-center gap-4">
+                                {/* 1. Botón de Sitio Web (si existe) */}
                                 {business.website_url && (
                                     <TouchableOpacity
                                         onPress={() => openLink(business.website_url)}
@@ -369,36 +385,25 @@ export default function VisualLayout({ business, gallery, theme }: Props) {
                                         <FontAwesome5 name="globe" size={22} color="white" />
                                     </TouchableOpacity>
                                 )}
-                                {socialLinks.instagram && (
-                                    <TouchableOpacity
-                                        onPress={() => openLink(socialLinks.instagram)}
-                                        className="w-14 h-14 rounded-2xl backdrop-blur-xl border border-white/20 items-center justify-center"
-                                        style={{ backgroundColor: 'rgba(225,48,108,0.2)' }}
-                                        activeOpacity={0.8}
-                                    >
-                                        <FontAwesome5 name="instagram" size={22} color="#E1306C" />
-                                    </TouchableOpacity>
-                                )}
-                                {socialLinks.tiktok && (
-                                    <TouchableOpacity
-                                        onPress={() => openLink(socialLinks.tiktok)}
-                                        className="w-14 h-14 rounded-2xl backdrop-blur-xl border border-white/20 items-center justify-center"
-                                        style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
-                                        activeOpacity={0.8}
-                                    >
-                                        <FontAwesome5 name="tiktok" size={22} color="white" />
-                                    </TouchableOpacity>
-                                )}
-                                {socialLinks.facebook && (
-                                    <TouchableOpacity
-                                        onPress={() => openLink(socialLinks.facebook)}
-                                        className="w-14 h-14 rounded-2xl backdrop-blur-xl border border-white/20 items-center justify-center"
-                                        style={{ backgroundColor: 'rgba(24,119,242,0.2)' }}
-                                        activeOpacity={0.8}
-                                    >
-                                        <FontAwesome5 name="facebook-f" size={22} color="#1877F2" />
-                                    </TouchableOpacity>
-                                )}
+
+                                {/* 2. Loop de Redes Sociales */}
+                                {displayLinks.map((link, index) => {
+                                    const config = SOCIAL_PLATFORMS[link.platform] || SOCIAL_PLATFORMS.globe;
+
+                                    return (
+                                        <TouchableOpacity
+                                            key={index}
+                                            onPress={() => openLink(link.url)}
+                                            className="w-14 h-14 rounded-2xl backdrop-blur-xl border border-white/20 items-center justify-center"
+                                            style={{
+                                                backgroundColor: `${config.color}30`
+                                            }}
+                                            activeOpacity={0.8}
+                                        >
+                                            <FontAwesome5 name={config.icon} size={22} color="white" />
+                                        </TouchableOpacity>
+                                    );
+                                })}
                             </View>
                         </View>
                     )}

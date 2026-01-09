@@ -1,3 +1,4 @@
+// app/(tabs)/register/_layout.tsx
 import { Stack } from 'expo-router';
 
 export default function RegisterLayout() {
@@ -10,6 +11,12 @@ export default function RegisterLayout() {
             <Stack.Screen name="index" />
             <Stack.Screen name="form" />
             <Stack.Screen name="manage" />
+            <Stack.Screen
+                name="manage-premium"
+                options={{
+                    presentation: 'modal'
+                }}
+            />
         </Stack>
     );
 }

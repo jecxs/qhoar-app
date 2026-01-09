@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Image, TouchableOpacity, Linking, Dimensions } 
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Business, BusinessImage, DesignConfig } from '@/constants/types/business';
 import { LinearGradient } from 'expo-linear-gradient';
+import {SOCIAL_PLATFORMS, SocialLink} from "@/constants/socials";
 
 const { width } = Dimensions.get('window');
 
@@ -38,6 +39,18 @@ export default function ModernLayout({ business, gallery, theme }: Props) {
             Linking.openURL(url);
         }
     };
+    const getSocials = (): SocialLink[] => {
+        const sl = business.social_links;
+        if (Array.isArray(sl)) return sl;
+
+        const arr: SocialLink[] = [];
+        if (sl?.facebook) arr.push({ platform: 'facebook', url: sl.facebook });
+        if (sl?.instagram) arr.push({ platform: 'instagram', url: sl.instagram });
+        if (sl?.tiktok) arr.push({ platform: 'tiktok', url: sl.tiktok });
+        return arr;
+    };
+
+    const displayLinks = getSocials();
 
     return (
         <ScrollView
@@ -156,47 +169,21 @@ export default function ModernLayout({ business, gallery, theme }: Props) {
                 )}
 
                 {/* REDES SOCIALES - minimalista */}
-                {(socialLinks.facebook || socialLinks.instagram || socialLinks.tiktok || business.website_url) && (
-                    <View className="mb-12">
-                        <Text className="text-sm uppercase tracking-widest text-gray-400 mb-4 font-semibold">
-                            Encuéntranos
-                        </Text>
-                        <View className="flex-row gap-4">
-                            {business.website_url && (
-                                <TouchableOpacity
-                                    onPress={() => openLink(business.website_url!)}
-                                    className="w-14 h-14 rounded-full bg-gray-100 items-center justify-center"
-                                >
-                                    <FontAwesome5 name="globe" size={18} color="#374151" />
-                                </TouchableOpacity>
-                            )}
-                            {socialLinks.facebook && (
-                                <TouchableOpacity
-                                    onPress={() => openLink(socialLinks.facebook!)}
-                                    className="w-14 h-14 rounded-full bg-gray-100 items-center justify-center"
-                                >
-                                    <FontAwesome5 name="facebook-f" size={18} color="#1877F2" />
-                                </TouchableOpacity>
-                            )}
-                            {socialLinks.instagram && (
-                                <TouchableOpacity
-                                    onPress={() => openLink(socialLinks.instagram!)}
-                                    className="w-14 h-14 rounded-full bg-gray-100 items-center justify-center"
-                                >
-                                    <FontAwesome5 name="instagram" size={18} color="#E1306C" />
-                                </TouchableOpacity>
-                            )}
-                            {socialLinks.tiktok && (
-                                <TouchableOpacity
-                                    onPress={() => openLink(socialLinks.tiktok!)}
-                                    className="w-14 h-14 rounded-full bg-gray-100 items-center justify-center"
-                                >
-                                    <FontAwesome5 name="tiktok" size={18} color="#000000" />
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    </View>
-                )}
+                {displayLinks.map((link, i) => {
+                    const cfg = SOCIAL_PLATFORMS[link.platform] || SOCIAL_PLATFORMS.globe;
+                    return (
+                        <TouchableOpacity
+                            key={i}
+                            onPress={() => Linking.openURL(link.url)}
+                            className="bg-gray-100 px-5 py-3 rounded-xl flex-row items-center active:bg-gray-200"
+                        >
+                            <FontAwesome5 name={cfg.icon} size={18} color={cfg.color} />
+                            <Text className="text-gray-700 font-semibold ml-2 capitalize">
+                                {cfg.label}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
 
                 {/* GALERÍA - Lookbook style */}
                 {gallery.length > 0 && (

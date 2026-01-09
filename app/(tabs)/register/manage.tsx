@@ -8,6 +8,8 @@ import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { FontAwesome5 } from '@expo/vector-icons';
 import ImagePicker from '@/components/ui/ImagePicker';
+import {SocialLink} from "@/constants/socials";
+import SocialsEditor from "@/components/business/SocialsEditor";
 
 interface BusinessData {
     id: string;
@@ -18,11 +20,7 @@ interface BusinessData {
     whatsapp: string;
     logo_url: string;
     hero_image_url: string;
-    social_links: {
-        facebook?: string;
-        instagram?: string;
-        tiktok?: string;
-    };
+    social_links: SocialLink[] | any;
 }
 
 export default function ManageProfileScreen() {
@@ -30,7 +28,7 @@ export default function ManageProfileScreen() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [business, setBusiness] = useState<BusinessData | null>(null);
-
+    const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
     // Estados del formulario
     const [formData, setFormData] = useState({
         name: '',
@@ -39,10 +37,7 @@ export default function ManageProfileScreen() {
         phone: '',
         whatsapp: '',
         logo_url: '',
-        hero_image_url: '',
-        facebook: '',
-        instagram: '',
-        tiktok: ''
+        hero_image_url: ''
     });
 
     useEffect(() => {
@@ -67,6 +62,15 @@ export default function ManageProfileScreen() {
             if (error) throw error;
 
             setBusiness(data);
+            let links: SocialLink[] = [];
+            if (Array.isArray(data.social_links)) {
+                links = data.social_links;
+            } else if (data.social_links) {
+                if (data.social_links.facebook) links.push({ platform: 'facebook', url: data.social_links.facebook });
+                if (data.social_links.instagram) links.push({ platform: 'instagram', url: data.social_links.instagram });
+                if (data.social_links.tiktok) links.push({ platform: 'tiktok', url: data.social_links.tiktok });
+            }
+            setSocialLinks(links);
             setFormData({
                 name: data.name || '',
                 description: data.description || '',
@@ -74,10 +78,7 @@ export default function ManageProfileScreen() {
                 phone: data.phone || '',
                 whatsapp: data.whatsapp || '',
                 logo_url: data.logo_url || '',
-                hero_image_url: data.hero_image_url || '',
-                facebook: data.social_links?.facebook || '',
-                instagram: data.social_links?.instagram || '',
-                tiktok: data.social_links?.tiktok || ''
+                hero_image_url: data.hero_image_url || ''
             });
         } catch (error: any) {
             console.error('Error loading business:', error);
@@ -105,11 +106,7 @@ export default function ManageProfileScreen() {
                     whatsapp: formData.whatsapp,
                     logo_url: formData.logo_url || null,
                     hero_image_url: formData.hero_image_url || null,
-                    social_links: {
-                        facebook: formData.facebook || null,
-                        instagram: formData.instagram || null,
-                        tiktok: formData.tiktok || null
-                    }
+                    social_links: socialLinks,
                 })
                 .eq('id', business?.id);
 
@@ -259,51 +256,11 @@ export default function ManageProfileScreen() {
                     {/* Redes Sociales */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Redes Sociales</Text>
-                        <Text style={styles.sectionSubtitle}>
-                            Ingresa la URL completa de tus perfiles
-                        </Text>
-
-                        <View style={styles.inputGroup}>
-                            <View style={styles.socialInputContainer}>
-                                <FontAwesome5 name="facebook" size={20} color="#1877F2" style={styles.socialIcon} />
-                                <TextInput
-                                    style={styles.socialInput}
-                                    value={formData.facebook}
-                                    onChangeText={(text) => setFormData({ ...formData, facebook: text })}
-                                    placeholder="https://facebook.com/tunegocio"
-                                    autoCapitalize="none"
-                                    keyboardType="url"
-                                />
-                            </View>
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <View style={styles.socialInputContainer}>
-                                <FontAwesome5 name="instagram" size={20} color="#E1306C" style={styles.socialIcon} />
-                                <TextInput
-                                    style={styles.socialInput}
-                                    value={formData.instagram}
-                                    onChangeText={(text) => setFormData({ ...formData, instagram: text })}
-                                    placeholder="https://instagram.com/tunegocio"
-                                    autoCapitalize="none"
-                                    keyboardType="url"
-                                />
-                            </View>
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <View style={styles.socialInputContainer}>
-                                <FontAwesome5 name="tiktok" size={20} color="#000000" style={styles.socialIcon} />
-                                <TextInput
-                                    style={styles.socialInput}
-                                    value={formData.tiktok}
-                                    onChangeText={(text) => setFormData({ ...formData, tiktok: text })}
-                                    placeholder="https://tiktok.com/@tunegocio"
-                                    autoCapitalize="none"
-                                    keyboardType="url"
-                                />
-                            </View>
-                        </View>
+                        <SocialsEditor
+                            links={socialLinks}
+                            onChange={setSocialLinks}
+                            isPremium={false}
+                        />
                     </View>
 
                     <View style={{ height: 100 }} />

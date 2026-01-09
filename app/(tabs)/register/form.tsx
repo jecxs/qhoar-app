@@ -8,7 +8,6 @@ import { supabase } from '@/lib/supabase';
 import { FontAwesome5 } from '@expo/vector-icons';
 import MapView, { Region, PROVIDER_GOOGLE } from 'react-native-maps';
 
-// Tipos para nuestros datos locales
 type Category = { id: number; name: string; icon_name: string };
 type Subcategory = { id: number; category_id: number; name: string };
 
@@ -68,6 +67,13 @@ export default function BusinessFormScreen() {
     const handleSubmit = async () => {
         if (!formData.name || !formData.ruc || !formData.subcategory_id) {
             Alert.alert("Faltan datos", "Por favor completa los campos obligatorios.");
+            return;
+        }
+        if (!/^\d{11}$/.test(formData.ruc)) {
+            Alert.alert(
+                "RUC inválido",
+                "El RUC debe contener exactamente 11 dígitos numéricos."
+            );
             return;
         }
 
@@ -134,7 +140,10 @@ export default function BusinessFormScreen() {
                     keyboardType="numeric"
                     maxLength={11}
                     value={formData.ruc}
-                    onChangeText={t => setFormData({...formData, ruc: t})}
+                    onChangeText={(t) => {
+                        const onlyNumbers = t.replace(/[^0-9]/g, '');
+                        setFormData({ ...formData, ruc: onlyNumbers });
+                    }}
                 />
             </View>
 
@@ -262,6 +271,49 @@ export default function BusinessFormScreen() {
             </View>
         </View>
     );
+    // --- RENDER STEP 3: TÉRMINOS Y CONDICIONES  ---
+    const renderStep3 = () => (
+        <View style={styles.formContainer}>
+            <View style={{ alignItems: 'center', marginVertical: 20 }}>
+                <View style={{ backgroundColor: '#ffedd5', padding: 20, borderRadius: 100, marginBottom: 16 }}>
+                    <FontAwesome5 name="file-contract" size={40} color="#f97316" />
+                </View>
+                <Text style={styles.sectionTitle}>Revisión y Términos</Text>
+                <Text style={{ textAlign: 'center', color: '#6b7280' }}>
+                    Antes de publicar tu negocio, por favor confirma la siguiente información.
+                </Text>
+            </View>
+
+            <View style={styles.termsBox}>
+                <Text style={styles.termsTitle}>1. Veracidad de la Información</Text>
+                <Text style={styles.termsText}>
+                    Declaro que soy el propietario o representante legal de <Text style={{fontWeight:'bold'}}>{formData.name}</Text> y que el número de RUC <Text style={{fontWeight:'bold'}}>{formData.ruc}</Text> es correcto y está activo.
+                </Text>
+
+                <Text style={styles.termsTitle}>2. Uso de Datos Públicos</Text>
+                <Text style={styles.termsText}>
+                    Acepto que la dirección, teléfono, ubicación en el mapa e imágenes proporcionadas sean públicas en la plataforma Qhoar para que los clientes puedan contactarme.
+                </Text>
+
+                <Text style={styles.termsTitle}>3. Proceso de Verificación</Text>
+                <Text style={styles.termsText}>
+                    Entiendo que mi solicitud pasará por un proceso de revisión manual por parte de los administradores de Qhoar antes de ser visible en el aplicativo.
+                </Text>
+            </View>
+
+            <View style={styles.summaryBox}>
+                <Text style={styles.label}>Resumen de solicitud:</Text>
+                <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 8}}>
+                    <FontAwesome5 name="store" size={14} color="#4b5563" />
+                    <Text style={{marginLeft: 8, color: '#374151', fontWeight: 'bold'}}>{formData.name}</Text>
+                </View>
+                <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 4}}>
+                    <FontAwesome5 name="id-card" size={14} color="#4b5563" />
+                    <Text style={{marginLeft: 8, color: '#374151'}}>RUC: {formData.ruc}</Text>
+                </View>
+            </View>
+        </View>
+    );
 
     return (
         <View style={styles.container}>
@@ -287,6 +339,7 @@ export default function BusinessFormScreen() {
                 >
                     {step === 1 && renderStep1()}
                     {step === 2 && renderStep2()}
+                    {step === 3 && renderStep3()}
 
                     <View style={{ height: TAB_BAR_HEIGHT + 100 }} />
                 </ScrollView>
@@ -305,13 +358,26 @@ export default function BusinessFormScreen() {
                     <View />
                 )}
 
-                {step < 2 ? (
+                {step < 3 ? (
                     <TouchableOpacity
                         onPress={() => {
-                            if (!formData.name || !formData.subcategory_id) {
-                                Alert.alert("Atención", "Selecciona una categoría y pon un nombre.");
-                                return;
+                            if (step === 1) {
+                                if (!formData.name || !formData.subcategory_id) {
+                                    Alert.alert("Atención", "Selecciona una categoría y pon un nombre.");
+                                    return;
+                                }
+                                if (!/^\d{11}$/.test(formData.ruc)) {
+                                    Alert.alert("RUC inválido", "Debes ingresar un RUC válido de 11 dígitos.");
+                                    return;
+                                }
                             }
+                            if (step === 2) {
+                                if (!formData.address) {
+                                    Alert.alert("Atención", "Por favor ingresa una dirección escrita.");
+                                    return;
+                                }
+                            }
+
                             setStep(step + 1);
                         }}
                         style={styles.nextButton}
@@ -329,7 +395,7 @@ export default function BusinessFormScreen() {
                             <ActivityIndicator color="white" />
                         ) : (
                             <>
-                                <Text style={styles.submitButtonText}>Finalizar</Text>
+                                <Text style={styles.submitButtonText}>Aceptar y Finalizar</Text>
                                 <FontAwesome5 name="check" color="white" size={16} />
                             </>
                         )}
@@ -542,5 +608,34 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: 'bold',
         marginRight: 8
+    },
+    termsBox: {
+        backgroundColor: '#f9fafb',
+        padding: 20,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        marginBottom: 20
+    },
+    termsTitle: {
+        fontWeight: 'bold',
+        color: '#1f2937',
+        fontSize: 14,
+        marginBottom: 4,
+        marginTop: 12
+    },
+    termsText: {
+        fontSize: 13,
+        color: '#4b5563',
+        lineHeight: 20
+    },
+    summaryBox: {
+        backgroundColor: 'white',
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        borderRadius: 12,
+        padding: 16,
+        borderLeftWidth: 4,
+        borderLeftColor: '#f97316'
     }
 });

@@ -1,6 +1,16 @@
 // app/events/[id].tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity, Platform, ActivityIndicator, Linking } from 'react-native';
+import {
+    View,
+    Text,
+    Image,
+    ScrollView,
+    TouchableOpacity,
+    Platform,
+    ActivityIndicator,
+    Linking,
+    Alert
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
@@ -22,7 +32,7 @@ export default function EventDetailModal() {
         try {
             const { data, error } = await supabase
                 .from('events')
-                .select('*, businesses(name, logo_url, phone, whatsapp)') // Traemos datos extra de la empresa
+                .select('*, businesses(name, logo_url, phone, whatsapp)')
                 .eq('id', id)
                 .single();
 
@@ -32,6 +42,31 @@ export default function EventDetailModal() {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+    const openMap = () => {
+        if (!event?.latitude || !event?.longitude) return;
+
+        const scheme = Platform.select({ ios: 'maps:0,0?q=', android: 'geo:0,0?q=' });
+        const latLng = `${event.latitude},${event.longitude}`;
+        const label = event.title;
+
+        const url = Platform.select({
+            ios: `${scheme}${label}@${latLng}`,
+            android: `${scheme}${latLng}(${label})`
+        });
+
+        Linking.openURL(url!).catch(() => {
+            Alert.alert("Error", "No se pudo abrir la aplicación de mapas.");
+        });
+    };
+    const handleMainAction = () => {
+        if (event?.external_link) {
+            Linking.openURL(event.external_link).catch(() =>
+                Alert.alert("Error", "No se pudo abrir el enlace.")
+            );
+        } else {
+            Alert.alert("Información", "Este evento no requiere registro previo o compra de entradas.");
         }
     };
 
@@ -57,6 +92,15 @@ export default function EventDetailModal() {
     // Lógica de Organizador
     const organizerName = event.businesses?.name || event.organizer_name || 'Qhoar Eventos';
     const isBusiness = !!event.businesses;
+
+    const actionButtonText = event.action_text || 'Más Información / Asistir';
+    const getActionIcon = () => {
+        const text = actionButtonText.toLowerCase();
+        if (text.includes('whatsapp')) return 'whatsapp';
+        if (text.includes('comprar') || text.includes('ticket')) return 'ticket-alt';
+        if (text.includes('web') || text.includes('sitio')) return 'globe';
+        return 'external-link-alt';
+    };
 
     return (
         <View className="flex-1 bg-white">
@@ -108,7 +152,7 @@ export default function EventDetailModal() {
                 {/* CONTENIDO DEL CUERPO */}
                 <View className="px-6 py-6">
 
-                    {/* Sección: Fecha y Hora */}
+                    {/* Fecha y Hora */}
                     <View className="flex-row items-start mb-6">
                         <View className="bg-orange-50 p-3 rounded-xl mr-4 items-center justify-center w-14 h-14">
                             <FontAwesome5 name="calendar-alt" size={24} color="#f97316" />
@@ -119,18 +163,33 @@ export default function EventDetailModal() {
                         </View>
                     </View>
 
-                    {/* Sección: Ubicación */}
+                    {/* NUEVO: Ubicación + Botón Mapa */}
                     <View className="flex-row items-start mb-6">
                         <View className="bg-blue-50 p-3 rounded-xl mr-4 items-center justify-center w-14 h-14">
                             <FontAwesome5 name="map-marker-alt" size={24} color="#3b82f6" />
                         </View>
                         <View className="flex-1">
-                            <Text className="text-gray-900 font-bold text-lg">Ubicación</Text>
-                            <Text className="text-gray-600 text-base">{event.location_text}</Text>
+                            <View className="flex-row justify-between items-start">
+                                <View className="flex-1 mr-2">
+                                    <Text className="text-gray-900 font-bold text-lg">Ubicación</Text>
+                                    <Text className="text-gray-600 text-base leading-5">{event.location_text}</Text>
+                                </View>
+
+                                {/* Botón para abrir mapa solo si hay coordenadas */}
+                                {(event.latitude && event.longitude) && (
+                                    <TouchableOpacity
+                                        onPress={openMap}
+                                        className="bg-blue-100 px-3 py-2 rounded-lg flex-row items-center border border-blue-200 mt-1"
+                                    >
+                                        <FontAwesome5 name="location-arrow" size={12} color="#2563eb" />
+                                        <Text className="text-blue-700 font-bold text-xs ml-2">Ver Mapa</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
                     </View>
 
-                    {/* Sección: Organizador */}
+                    {/* Organizador */}
                     <View className="flex-row items-center mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
                         {isBusiness && event.businesses?.logo_url ? (
                             <Image source={{ uri: event.businesses.logo_url }} className="w-12 h-12 rounded-full mr-3 bg-gray-200" />
@@ -143,7 +202,6 @@ export default function EventDetailModal() {
                             <Text className="text-gray-500 text-xs uppercase font-bold">Organizado por</Text>
                             <Text className="text-gray-900 font-bold text-lg">{organizerName}</Text>
                         </View>
-                        {/* Si es una empresa, podríamos poner un botón para ir a su perfil */}
                         {isBusiness && (
                             <TouchableOpacity className="bg-white p-2 rounded-full border border-gray-200">
                                 <FontAwesome5 name="chevron-right" size={14} color="#9ca3af" />
@@ -153,30 +211,30 @@ export default function EventDetailModal() {
 
                     <View className="h-[1px] bg-gray-200 my-2 w-full" />
 
-                    {/* Sección: Descripción */}
+                    {/* Descripción */}
                     <Text className="text-gray-900 font-bold text-xl mb-3 mt-4">Acerca del evento</Text>
                     <Text className="text-gray-600 text-base leading-7 text-justify">
                         {event.description}
                     </Text>
 
-                    {/* Espacio final para scroll */}
-                    <View className="h-20" />
+                    <View className="h-24" />
                 </View>
             </ScrollView>
 
             {/* BOTÓN DE ACCIÓN (Fixed Bottom) */}
-            <View className="absolute bottom-0 w-full p-4 bg-white border-t border-gray-100">
-                <TouchableOpacity
-                    className="w-full bg-orange-600 py-4 rounded-xl items-center flex-row justify-center shadow-lg shadow-orange-200"
-                    onPress={() => {
-                        // Aquí podrías abrir Google Maps o WhatsApp
-                        console.log("Acción principal");
-                    }}
-                >
-                    <FontAwesome5 name="ticket-alt" size={18} color="white" />
-                    <Text className="text-white font-bold text-lg ml-2">Asistir / Más Info</Text>
-                </TouchableOpacity>
-            </View>
+            {event.external_link && (
+                <View className="absolute bottom-0 w-full p-4 bg-white border-t border-gray-100">
+                    <TouchableOpacity
+                        className="w-full bg-orange-600 py-4 rounded-xl items-center flex-row justify-center shadow-lg shadow-orange-200 active:bg-orange-700"
+                        onPress={handleMainAction}
+                    >
+                        <FontAwesome5 name={getActionIcon()} size={18} color="white" />
+                        <Text className="text-white font-bold text-lg ml-2 uppercase">
+                            {actionButtonText}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            )}
         </View>
     );
 }

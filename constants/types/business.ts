@@ -1,6 +1,8 @@
 // types/business.ts
 
 // 1. Configuración de Diseño
+import {SocialLink} from "@/constants/socials";
+
 export interface DesignConfig {
     layout_variant: 'classic' | 'modern' | 'visual';
     primary_color?: string;
@@ -33,11 +35,7 @@ export interface Business {
     longitude?: number;
     logo_url: string;
     hero_image_url: string;
-    social_links: {
-        facebook?: string;
-        instagram?: string;
-        tiktok?: string;
-    };
+    social_links: SocialLink[] | any;
     is_premium: boolean;
     design_config: DesignConfig | null;
     business_images?: BusinessImage[];
